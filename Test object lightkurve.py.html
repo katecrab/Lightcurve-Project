@@ -1,0 +1,190 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[1]:
+
+
+import numpy as np
+import pandas as pd
+from pandas import DataFrame as df
+from matplotlib import pyplot as plt
+from lightkurve import search_lightcurvefile, search_targetpixelfile
+
+
+# In[2]:
+
+
+#reading in the desired file from kepler
+lc = search_targetpixelfile('KIC 10264202', quarter = 4).download()
+file = search_lightcurvefile('KIC 10264202', quarter = 4).download()
+#plotting the pixelfile, not needed for the rest of the data
+lc.plot()
+#plotting the light curve
+file.plot()
+#plotting the corrected file
+pdcsap = file.PDCSAP_FLUX
+pdcsap.scatter(title='KIC 6922244 corrected')
+
+
+# In[3]:
+
+
+#making the file into a dataframe and testing that the needed values will be plottable in this form
+#testing column names work
+lightcurve_frame= pdcsap.to_pandas()
+print(lightcurve_frame)
+plt.plot(lightcurve_frame['time'],lightcurve_frame['flux'])
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[4]:
+
+
+#finding the number of eclipses in the dataframe
+number_eclipses_min = lightcurve_frame['time'].min()
+number_eclipses_max = lightcurve_frame['time'].max()
+print(number_eclipses_max)
+print(number_eclipses_min)
+
+
+# Kepler time: BJDKDB units - 2454833
+# Other guy: real units -240000
+# 
+
+# In[5]:
+
+
+epoch = (54965.550176+2400000-2454833) #bjd0
+period = (1.0351478)
+
+#all of the following caluclations are orrect for first epoch, but likely flawed for the second epoch
+duration = 2*0.0744 #pwidth
+secondary_epoch = epoch+(period/2)
+primary_epoch = epoch+period
+first_epoch = int((number_eclipses_min-epoch)/period)*period+epoch  #first epoch isnt necessarily the first eclipse, find it with this
+
+secondary_epoch = epoch+(period/2)
+primary_epoch = epoch+period
+first_epoch = int((number_eclipses_min-epoch)/period)*period+epoch  #first epoch isnt necessarily the first eclipse, find it with this
+second_epoch = int((number_eclipses_min-epoch)/(period))*period+epoch
+
+number_eclipses=int((number_eclipses_max-number_eclipses_min)/period) 
+print(number_eclipses)
+print(first_epoch)
+print(epoch)
+print(number_eclipses_min)
+
+
+# In[6]:
+
+
+#add one period to first eclipse to get start point for data
+#plot time only but starting at first epoch-duration to epoch + duration
+#setting upthe variables and testing them for the different for loops later
+
+#variables for the first eclipsefor loop
+x1 = first_epoch-(duration/2) +period*2
+x2 = first_epoch+(duration/2) +period*2
+plt.plot(lightcurve_frame.time[x1:x2], lightcurve_frame.flux[x1:x2])
+plt.scatter(lightcurve_frame.time[x1:x2], lightcurve_frame.flux[x1:x2])
+eclipse_num = np.arange(1, number_eclipses, 1)
+#variables for the secondary for loop
+y1 = second_epoch-(duration/2) +(period/2)*2
+y2 = second_epoch+(duration/2) +(period/2)*2
+plt.subplot()
+plt.plot(lightcurve_frame.time[y1:y2], lightcurve_frame.flux[y1:y2])
+plt.scatter(lightcurve_frame.time[y1:y2], lightcurve_frame.flux[y1:y2])
+eclipse_num = np.arange(1, number_eclipses, 1)
+
+
+# In[ ]:
+
+
+
+
+
+# In[25]:
+
+
+x1 = first_epoch-duration +period*2
+x2 = first_epoch+duration +period*2
+plt.plot(lightcurve_frame.time[x1:x2], lightcurve_frame.flux[x1:x2])
+plt.scatter(lightcurve_frame.time[x1:x2], lightcurve_frame.flux[x1:x2])
+eclipse_num = np.arange(1, number_eclipses, 1)
+y1 = second_epoch-duration +(period/2)*2
+y2 = second_epoch+duration +(period/2)*2
+#plt.plot(lightcurve_frame.time[y1:y2], lightcurve_frame.flux[y1:y2])
+#plt.scatter(lightcurve_frame.time[y1:y2], lightcurve_frame.flux[y1:y2])
+eclipse_num = np.arange(1, number_eclipses, 1)
+i = np.arange(1,10)
+
+#for i in file:
+    #file = search_lightcurvefile('KIC 10264202', quarter = i).download()
+    #pdcsap = file.PDCSAP_FLUX
+    #lightcurve_frame= pdcsap.to_pandas()
+    #number_eclipses_min = lightcurve_frame['time'].min()
+    #number_eclipses_max = lightcurve_frame['time'].max()
+    #print(lightcurve_frame)
+    #plt.plot(lightcurve_frame['time'],lightcurve_frame['flux'])
+
+    #cant figure out wtf is going on with the secondary eclipse...
+for eclipse1 in eclipse_num:
+    x1 = first_epoch-(duration/2) +period*eclipse1
+    x2 = first_epoch+(duration/2) +period*eclipse1
+    plt.subplots()  #(number of rows, number of columns, iteration)         
+    plt.plot(lightcurve_frame.time[x1:x2], lightcurve_frame.flux[x1:x2])
+    plt.scatter(lightcurve_frame.time[x1:x2], lightcurve_frame.flux[x1:x2])
+    y1 = second_epoch-(duration/2) +(period/2)*eclipse1
+    y2 = second_epoch+(duration/2) +(period/2)*eclipse1
+    plt.subplots()
+    plt.plot(lightcurve_frame.time[y1:y2], lightcurve_frame.flux[y1:y2], c='coral')
+    plt.scatter(lightcurve_frame.time[y1:y2], lightcurve_frame.flux[y1:y2], c='coral')
+    plt.show()
+
+
+# In[8]:
+
+
+for eclipse2 in eclipse_num2:
+    y1 = second_epoch-(duration/2) +(period)*eclipse2
+    y2 = second_epoch+(duration/2) +(period)*eclipse2
+    plt.subplot()
+    plt.plot(lightcurve_frame.time[y1:y2], lightcurve_frame.flux[y1:y2])
+    plt.scatter(lightcurve_frame.time[y1:y2], lightcurve_frame.flux[y1:y2])
+    plt.show()
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
